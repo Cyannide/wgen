@@ -39,6 +39,13 @@ pub struct PanelExport {
     /// not needed for unreal engine which handles multi-textures heightmaps
     /// might be needed for other engines (for example godot heightmap terrain plugin)
     pub seamless: bool,
+    /// should each tile carry a one pixel ring of its neighbours' terrain ?
+    /// the ring is not part of the tile, it is context: it lets a mesher take a
+    /// centred height gradient at the tile border, so two adjacent tiles compute
+    /// the same normal there instead of each leaning inward and creasing the
+    /// lighting along every seam. adds 2 pixels to the width and height of every
+    /// file. implies seamless, since a shared edge is what the ring surrounds.
+    pub apron: bool,
     /// format to export, either png or exr
     pub file_type: ExportFileType,
     /// to disable the exporter ui during export
@@ -58,6 +65,7 @@ impl Default for PanelExport {
             tiles_v: 1.0,
             file_path,
             seamless: false,
+            apron: false,
             file_type: ExportFileType::PNG,
             enabled: true,
             cur_dir,
@@ -131,6 +139,10 @@ impl PanelExport {
             ui.horizontal(|ui| {
                 ui.checkbox(&mut self.seamless, "seamless")
                     .on_hover_text("whether pixel values are repeated on two adjacent tiles");
+                ui.checkbox(&mut self.apron, "apron").on_hover_text(
+                    "add a 1 pixel ring of the neighbouring tiles' terrain so a mesher can \
+                     compute matching normals at tile edges (files gain 2 pixels each way)",
+                );
                 export = ui.button("Export!").clicked();
             });
         });
